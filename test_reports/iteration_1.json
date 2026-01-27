@@ -1,0 +1,58 @@
+{
+  "summary": "Completed comprehensive testing of CRM system - all core functionalities working correctly",
+  "backend_issues": {
+    "critical_bugs": [],
+    "flaky_endpoints": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [
+      {
+        "component": "Toast notifications",
+        "issue": "Toast notifications can overlay clickable buttons temporarily",
+        "selector": "[data-sonner-toast]",
+        "fix_priority": "LOW",
+        "workaround": "Toasts auto-dismiss after a few seconds"
+      }
+    ],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "passed_tests": [
+    "Login with valid credentials (sunil@bora.tech / sunil@1202)",
+    "Login with invalid credentials shows error message",
+    "Dashboard displays all 5 KPI cards correctly",
+    "Customer CRUD operations (Create, Read, Update, Delete)",
+    "Lead CRUD operations with product calculations",
+    "Lead conversion to Proforma Invoice",
+    "Proforma Invoice listing and details",
+    "Purchase Order CRUD operations",
+    "Purchase Order creation with auto-calculation",
+    "Navigation sidebar works for all modules",
+    "Search functionality on customers and leads pages",
+    "Template download buttons available",
+    "Margin Calculator page accessible",
+    "Auto-calculation of amounts in forms",
+    "Backend API endpoints (29/29 tests passed)",
+    "Authentication and authorization",
+    "Dashboard KPI data retrieval",
+    "All CRUD operations for all entities",
+    "Lead conversion workflow",
+    "Margin calculation with freight updates",
+    "Template downloads working",
+    "Bulk upload endpoints available"
+  ],
+  "test_report_links": [
+    "/app/backend_test.py",
+    "/app/test_reports/backend_api_results_20241229_103323.json"
+  ],
+  "action_item_for_main_agent": "",
+  "updated_files": [
+    "/app/backend_test.py"
+  ],
+  "success_percentage": {
+    "backend": "100% (29/29 tests passed)",
+    "frontend": "95% (minor toast overlay issue)"
+  },
+  "should_call_test_agent_after_fix": "false",
+  "should_main_agent_test_itself": "true"
+}

@@ -1,0 +1,242 @@
+{
+  "timestamp": "20251229_122047",
+  "total_tests": 39,
+  "passed_tests": 39,
+  "success_rate": 100.0,
+  "test_results": [
+    {
+      "test": "Login with valid credentials",
+      "success": true,
+      "details": "Status: 200",
+      "error": ""
+    },
+    {
+      "test": "Login with invalid credentials",
+      "success": true,
+      "details": "Status: 401",
+      "error": ""
+    },
+    {
+      "test": "Auth verification",
+      "success": true,
+      "details": "Status: 200",
+      "error": ""
+    },
+    {
+      "test": "Dashboard KPI",
+      "success": true,
+      "details": "Status: 200",
+      "error": ""
+    },
+    {
+      "test": "Dashboard KPI - All fields present",
+      "success": true,
+      "details": "",
+      "error": ""
+    },
+    {
+      "test": "Create Customer",
+      "success": true,
+      "details": "Status: 200",
+      "error": ""
+    },
+    {
+      "test": "Get All Customers",
+      "success": true,
+      "details": "Status: 200",
+      "error": ""
+    },
+    {
+      "test": "Get Specific Customer",
+      "success": true,
+      "details": "Status: 200",
+      "error": ""
+    },
+    {
+      "test": "Update Customer",
+      "success": true,
+      "details": "Status: 200",
+      "error": ""
+    },
+    {
+      "test": "Create Lead",
+      "success": true,
+      "details": "Status: 200",
+      "error": ""
+    },
+    {
+      "test": "Get All Leads",
+      "success": true,
+      "details": "Status: 200",
+      "error": ""
+    },
+    {
+      "test": "Get Specific Lead",
+      "success": true,
+      "details": "Status: 200",
+      "error": ""
+    },
+    {
+      "test": "Convert Lead to Proforma Invoice",
+      "success": true,
+      "details": "Status: 200",
+      "error": ""
+    },
+    {
+      "test": "Get All Proforma Invoices",
+      "success": true,
+      "details": "Status: 200",
+      "error": ""
+    },
+    {
+      "test": "Get Specific Proforma Invoice",
+      "success": true,
+      "details": "Status: 200",
+      "error": ""
+    },
+    {
+      "test": "Create Purchase Order (Single Product)",
+      "success": true,
+      "details": "Status: 200",
+      "error": ""
+    },
+    {
+      "test": "PO Single Product - Amount Calculation",
+      "success": true,
+      "details": "",
+      "error": ""
+    },
+    {
+      "test": "Get All Purchase Orders",
+      "success": true,
+      "details": "Status: 200",
+      "error": ""
+    },
+    {
+      "test": "Get Specific Purchase Order",
+      "success": true,
+      "details": "Status: 200",
+      "error": ""
+    },
+    {
+      "test": "PO Single Product - Products Array",
+      "success": true,
+      "details": "",
+      "error": ""
+    },
+    {
+      "test": "Create Multi-Product Purchase Order",
+      "success": true,
+      "details": "Status: 200",
+      "error": ""
+    },
+    {
+      "test": "Multi-Product PO - Total Amount",
+      "success": true,
+      "details": "",
+      "error": ""
+    },
+    {
+      "test": "Multi-Product PO - Products Count",
+      "success": true,
+      "details": "",
+      "error": ""
+    },
+    {
+      "test": "Update Purchase Order (Add Product)",
+      "success": true,
+      "details": "Status: 200",
+      "error": ""
+    },
+    {
+      "test": "Edit PO - Updated Total Amount",
+      "success": true,
+      "details": "",
+      "error": ""
+    },
+    {
+      "test": "Edit PO - Updated Products Count",
+      "success": true,
+      "details": "",
+      "error": ""
+    },
+    {
+      "test": "Create Linked Multi-Product Purchase Order",
+      "success": true,
+      "details": "Status: 200",
+      "error": ""
+    },
+    {
+      "test": "Linked Multi-Product PO - Total Amount",
+      "success": true,
+      "details": "",
+      "error": ""
+    },
+    {
+      "test": "Get Margin Calculator Data",
+      "success": true,
+      "details": "Status: 200",
+      "error": ""
+    },
+    {
+      "test": "Update Margin Freight",
+      "success": true,
+      "details": "Status: 200",
+      "error": ""
+    },
+    {
+      "test": "Download Customer Template",
+      "success": true,
+      "details": "",
+      "error": ""
+    },
+    {
+      "test": "Download Lead Template",
+      "success": true,
+      "details": "",
+      "error": ""
+    },
+    {
+      "test": "Download Purchase Order Template",
+      "success": true,
+      "details": "",
+      "error": ""
+    },
+    {
+      "test": "Delete PO 188fdb26-4875-42e9-917f-236f9058e031",
+      "success": true,
+      "details": "Status: 200",
+      "error": ""
+    },
+    {
+      "test": "Delete PO 748f7692-ce68-4393-8aa4-f5cb2000c326",
+      "success": true,
+      "details": "Status: 200",
+      "error": ""
+    },
+    {
+      "test": "Delete PO 275bd1f9-9fb3-4fce-a7a9-92e319bbb2bc",
+      "success": true,
+      "details": "Status: 200",
+      "error": ""
+    },
+    {
+      "test": "Delete PI 595dee48-36d7-4c8a-b909-41e9a1f35c7a",
+      "success": true,
+      "details": "Status: 200",
+      "error": ""
+    },
+    {
+      "test": "Delete Lead 5c3bde8a-78f8-4eeb-9187-247932202c47",
+      "success": true,
+      "details": "Status: 200",
+      "error": ""
+    },
+    {
+      "test": "Delete Customer 9974fcd3-5a48-49f8-8b6a-4ae12a7b4be3",
+      "success": true,
+      "details": "Status: 200",
+      "error": ""
+    }
+  ]
+}

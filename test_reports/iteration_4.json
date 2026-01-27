@@ -1,0 +1,32 @@
+{
+  "summary": "Completed comprehensive frontend testing of View pages for Leads and Purchase Orders. All view functionality working correctly with proper navigation, data display, and UI components.",
+  "backend_issues": {},
+  "frontend_issues": {},
+  "passed_tests": [
+    "Leads list page displays View button (eye icon) for each lead",
+    "Lead Detail page loads correctly when clicking View button",
+    "Lead Detail page shows all products in properly formatted table",
+    "Lead Detail page displays Items count badge correctly (9 Items)",
+    "Lead Detail page shows Total Amount correctly (₹7,44,13,650)",
+    "Lead Detail page has proper table headers (S.No, Product, Category, Quantity, Price, Amount)",
+    "Purchase Orders list page displays View button (eye icon) for each order",
+    "PO Detail page loads correctly when clicking View button",
+    "PO Detail page shows all products in properly formatted table",
+    "PO Detail page displays Items count badge correctly (2 Items)",
+    "PO Detail page shows Total Amount correctly (₹1,750)",
+    "PO Detail page has proper table headers (S.No, Product, Category, Quantity, Price, Amount)",
+    "Navigation back to list pages works correctly using back button",
+    "Proforma Invoice page loads correctly (empty state confirmed)",
+    "All routes are properly configured (/leads/:id and /purchase-orders/:id)",
+    "All data-testid attributes are properly implemented for testing",
+    "UI styling and layout is consistent across all pages",
+    "Login functionality works correctly",
+    "Session management works as expected"
+  ],
+  "test_report_links": [],
+  "action_item_for_main_agent": "",
+  "updated_files": [],
+  "success_percentage": "frontend: 100%",
+  "should_call_test_agent_after_fix": "false",
+  "should_main_agent_test_itself": "true"
+}

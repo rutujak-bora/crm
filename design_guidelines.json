@@ -1,0 +1,163 @@
+{
+  "identity": {
+    "name": "E1",
+    "role": "Anti-AI Designer",
+    "mission": "Create a top 1% dark-mode CRM that feels professional, dense, and technically precise, avoiding generic SaaS aesthetics."
+  },
+  "typography": {
+    "fonts": {
+      "heading": {
+        "family": "Outfit",
+        "url": "https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap",
+        "usage": "Headings (h1-h3), Big Numbers, KPIs. Use font-weight 500 or 600. Avoid bold (700) unless necessary."
+      },
+      "body": {
+        "family": "Public Sans",
+        "url": "https://fonts.googleapis.com/css2?family=Public+Sans:wght@300;400;500;600&display=swap",
+        "usage": "Body text, tables, inputs, labels. Excellent legibility at small sizes."
+      },
+      "mono": {
+        "family": "JetBrains Mono",
+        "url": "https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&display=swap",
+        "usage": "IDs, Order Numbers, Code snippets, tabular data requiring alignment."
+      }
+    },
+    "rules": [
+      "Headings > 32px must use tracking-tight (-0.02em).",
+      "Overlines/Labels must be Uppercase + text-xs + tracking-widest (0.1em).",
+      "Line height: leading-none for headings, leading-relaxed for body.",
+      "Never use pure white (#FFFFFF) for text. Use slate-50 (#f8fafc) or slate-200 (#e2e8f0)."
+    ]
+  },
+  "colors": {
+    "palette": {
+      "mode": "dark",
+      "background": {
+        "default": "#0f172a",
+        "paper": "#1e293b",
+        "subtle": "#334155"
+      },
+      "primary": {
+        "main": "#3b82f6",
+        "hover": "#2563eb",
+        "foreground": "#ffffff"
+      },
+      "secondary": {
+        "main": "#64748b",
+        "foreground": "#f8fafc"
+      },
+      "accent": {
+        "cyan": "#06b6d4",
+        "teal": "#14b8a6",
+        "purple": "#8b5cf6"
+      },
+      "border": {
+        "default": "#334155",
+        "subtle": "#1e293b"
+      },
+      "text": {
+        "primary": "#f8fafc",
+        "secondary": "#94a3b8",
+        "muted": "#64748b"
+      }
+    },
+    "tailwind_extension": {
+      "colors": {
+        "background": "hsl(222.2 84% 4.9%)",
+        "foreground": "hsl(210 40% 98%)",
+        "card": "hsl(222.2 84% 4.9%)",
+        "card-foreground": "hsl(210 40% 98%)",
+        "popover": "hsl(222.2 84% 4.9%)",
+        "popover-foreground": "hsl(210 40% 98%)",
+        "primary": "hsl(217.2 91.2% 59.8%)",
+        "primary-foreground": "hsl(222.2 47.4% 11.2%)",
+        "secondary": "hsl(217.2 32.6% 17.5%)",
+        "secondary-foreground": "hsl(210 40% 98%)",
+        "muted": "hsl(217.2 32.6% 17.5%)",
+        "muted-foreground": "hsl(215 20.2% 65.1%)",
+        "accent": "hsl(217.2 32.6% 17.5%)",
+        "accent-foreground": "hsl(210 40% 98%)",
+        "destructive": "hsl(0 62.8% 30.6%)",
+        "destructive-foreground": "hsl(210 40% 98%)",
+        "border": "hsl(217.2 32.6% 17.5%)",
+        "input": "hsl(217.2 32.6% 17.5%)",
+        "ring": "hsl(212.7 26.8% 83.9%)"
+      }
+    }
+  },
+  "layout": {
+    "strategy": "The Control Room Grid",
+    "grid_system": {
+      "dashboard": "grid grid-cols-1 md:grid-cols-4 gap-6 p-6",
+      "form": "grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl"
+    },
+    "spacing": {
+      "container_padding": "p-6 md:p-8 lg:p-12",
+      "section_gap": "gap-8",
+      "internal_padding": "p-6"
+    },
+    "surface_styles": {
+      "card": "bg-slate-900/50 border border-slate-800 rounded-xl shadow-sm backdrop-blur-sm",
+      "sidebar": "bg-slate-950/90 border-r border-slate-800 backdrop-blur-xl",
+      "header": "bg-slate-950/80 border-b border-slate-800 backdrop-blur-md sticky top-0 z-50"
+    }
+  },
+  "components": {
+    "buttons": {
+      "primary": "bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2 rounded-md font-medium transition-all active:scale-95 shadow-[0_0_15px_rgba(59,130,246,0.3)]",
+      "secondary": "bg-secondary text-secondary-foreground hover:bg-secondary/80 h-10 px-4 py-2 rounded-md font-medium transition-all active:scale-95",
+      "ghost": "hover:bg-accent hover:text-accent-foreground h-10 px-4 py-2 rounded-md transition-colors"
+    },
+    "inputs": {
+      "default": "flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 transition-all focus:border-primary/50"
+    },
+    "cards": {
+      "kpi": "relative overflow-hidden rounded-xl border border-slate-800 bg-slate-900/50 p-6 hover:border-slate-700 transition-colors group",
+      "table_container": "rounded-xl border border-slate-800 bg-slate-900/50 overflow-hidden"
+    }
+  },
+  "visual_enhancers": {
+    "gradients": {
+      "subtle_glow": "bg-gradient-to-br from-slate-900 to-slate-950",
+      "active_border": "bg-gradient-to-r from-blue-500 to-cyan-500"
+    },
+    "effects": {
+      "glass": "backdrop-blur-xl bg-slate-950/70 border border-white/5",
+      "noise": "url(\"data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.05'/%3E%3C/svg%3E\")"
+    }
+  },
+  "images": {
+    "login_background": {
+      "url": "https://images.unsplash.com/photo-1759735541630-036eefb7cd3a?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NDk1Nzh8MHwxfHNlYXJjaHwxfHxhYnN0cmFjdCUyMGJsdWUlMjB0ZWNobm9sb2d5JTIwYmFja2dyb3VuZCUyMGRhcmt8ZW58MHx8fHwxNzY3MDAzNDcwfDA&ixlib=rb-4.1.0&q=85",
+      "alt": "Abstract blue technology background",
+      "usage": "Full screen background for login page with overlay"
+    },
+    "user_avatar": {
+      "url": "https://images.unsplash.com/photo-1749793716288-a5ab5ed3b0e1?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NTY2Njl8MHwxfHNlYXJjaHwxfHxwcm9mZXNzaW9uYWwlMjBtYW4lMjBwb3J0cmFpdCUyMGJ1c2luZXNzfGVufDB8fHx8MTc2NzAwMzQ3MXww&ixlib=rb-4.1.0&q=85",
+      "alt": "User Profile",
+      "usage": "Dashboard header user menu"
+    }
+  },
+  "icons": {
+    "library": "lucide-react",
+    "style": "Stroke width 1.5px for elegance, 2px for active states."
+  },
+  "universal_guidelines": [
+    "DO NOT use gradients for text.",
+    "DO NOT use pure black (#000000) backgrounds; use #020617 or #0f172a.",
+    "Always add 'data-testid' to interactive elements.",
+    "Use 'sonner' for toasts.",
+    "Use 'recharts' for charts with custom tooltips.",
+    "Ensure all forms have validation feedback.",
+    "Tables must have sticky headers.",
+    "Use 'Grid Borders' style for the dashboard: visible 1px borders between grid items instead of gaps where possible, or tight gaps with borders."
+  ],
+  "instructions_to_main_agent": [
+    "1. Install dependencies: `npm install lucide-react recharts sonner clsx tailwind-merge`",
+    "2. Update `tailwind.config.js` with the colors provided in this JSON.",
+    "3. Update `index.css` to import the fonts (Outfit, Public Sans, JetBrains Mono).",
+    "4. Create a `Layout` component that implements the Sidebar + Header + Main Content structure.",
+    "5. Use the 'Control Room Grid' strategy for the Dashboard page.",
+    "6. Ensure the Login page uses the provided background image with a dark overlay for text readability."
+  ]
+}

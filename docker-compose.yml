@@ -1,0 +1,23 @@
+services:
+  backend:
+    build: ./backend
+    container_name: crm_backend
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./backend:/app
+    environment:
+      - MONGO_URI=${MONGO_URI}
+      - DB_NAME=${DB_NAME}
+      - JWT_SECRET=${JWT_SECRET}
+      - CORS_ORIGINS=${CORS_ORIGINS}
+    restart: unless-stopped
+
+  frontend:
+    build: ./frontend
+    container_name: crm_frontend
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+    restart: unless-stopped

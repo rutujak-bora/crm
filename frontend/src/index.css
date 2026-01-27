@@ -1,0 +1,211 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+    :root {
+        /* Professional Corporate Theme - Light Mode */
+        --background: 220 20% 97%;
+        --foreground: 222 47% 11%;
+        --card: 0 0% 100%;
+        --card-foreground: 222 47% 11%;
+        --popover: 0 0% 100%;
+        --popover-foreground: 222 47% 11%;
+        --primary: 226 70% 45%;
+        --primary-foreground: 0 0% 100%;
+        --secondary: 220 14% 96%;
+        --secondary-foreground: 222 47% 11%;
+        --muted: 220 14% 96%;
+        --muted-foreground: 220 9% 46%;
+        --accent: 142 71% 45%;
+        --accent-foreground: 0 0% 100%;
+        --destructive: 0 84% 60%;
+        --destructive-foreground: 0 0% 100%;
+        --border: 220 13% 91%;
+        --input: 220 13% 91%;
+        --ring: 226 70% 45%;
+        --radius: 0.5rem;
+        
+        /* Custom colors */
+        --sidebar-bg: 226 70% 25%;
+        --sidebar-text: 220 20% 95%;
+        --sidebar-hover: 226 70% 35%;
+        --sidebar-active: 142 71% 45%;
+        --table-header: 226 70% 97%;
+        --table-hover: 220 20% 98%;
+        --shadow-color: 226 30% 80%;
+    }
+}
+
+@layer base {
+    * {
+        @apply border-border;
+    }
+    body {
+        @apply bg-background text-foreground;
+        font-family: 'Inter', sans-serif;
+    }
+    h1, h2, h3, h4, h5, h6 {
+        font-family: 'Plus Jakarta Sans', sans-serif;
+    }
+}
+
+/* Custom scrollbar - Light theme */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: #f1f5f9;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
+}
+
+/* Professional card shadow */
+.card-shadow {
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05), 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.card-shadow-lg {
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+}
+
+/* Primary button glow */
+.btn-primary {
+    @apply bg-[hsl(226,70%,45%)] hover:bg-[hsl(226,70%,40%)] text-white font-medium;
+    transition: all 0.2s ease;
+}
+
+.btn-primary:hover {
+    box-shadow: 0 4px 12px rgba(59, 81, 163, 0.25);
+}
+
+/* Accent button (Green) */
+.btn-accent {
+    @apply bg-[hsl(142,71%,45%)] hover:bg-[hsl(142,71%,40%)] text-white font-medium;
+    transition: all 0.2s ease;
+}
+
+.btn-accent:hover {
+    box-shadow: 0 4px 12px rgba(34, 197, 94, 0.25);
+}
+
+/* Danger button */
+.btn-danger {
+    @apply bg-[hsl(0,84%,60%)] hover:bg-[hsl(0,84%,55%)] text-white font-medium;
+}
+
+/* Secondary button */
+.btn-secondary {
+    @apply bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium border border-slate-200;
+}
+
+/* Table styles - Professional */
+.table-container {
+    @apply rounded-lg border border-slate-200 bg-white overflow-hidden;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.table-header-bg {
+    @apply bg-slate-50;
+}
+
+/* KPI card styles */
+.kpi-card {
+    @apply relative overflow-hidden rounded-xl bg-white p-6 border border-slate-200;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05), 0 1px 2px rgba(0, 0, 0, 0.1);
+    transition: all 0.2s ease;
+}
+
+.kpi-card:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    transform: translateY(-1px);
+}
+
+/* Sidebar styles - Dark professional */
+.sidebar {
+    background: linear-gradient(180deg, hsl(226, 70%, 25%) 0%, hsl(226, 70%, 20%) 100%);
+}
+
+.sidebar-item {
+    @apply flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-150;
+}
+
+.sidebar-item-active {
+    background: hsl(142, 71%, 45%);
+    color: white;
+}
+
+.sidebar-item-inactive {
+    color: rgba(255, 255, 255, 0.7);
+}
+
+.sidebar-item-inactive:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: white;
+}
+
+/* Header styles */
+.header {
+    @apply bg-white/95 border-b border-slate-200 backdrop-blur-sm sticky top-0 z-50;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+}
+
+/* Form input focus */
+.input-focus {
+    @apply focus:border-[hsl(226,70%,45%)] focus:ring-2 focus:ring-[hsl(226,70%,45%)]/20;
+}
+
+/* Animation */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fade-in {
+    animation: fadeIn 0.3s ease-out forwards;
+}
+
+/* Badge styles */
+.badge-primary {
+    @apply bg-blue-50 text-blue-700 border border-blue-200;
+}
+
+.badge-success {
+    @apply bg-emerald-50 text-emerald-700 border border-emerald-200;
+}
+
+.badge-warning {
+    @apply bg-amber-50 text-amber-700 border border-amber-200;
+}
+
+.badge-danger {
+    @apply bg-red-50 text-red-700 border border-red-200;
+}
+
+/* Table row hover */
+.table-row-hover:hover {
+    @apply bg-slate-50;
+}
+
+/* Alternating row colors */
+.table-row-alt:nth-child(even) {
+    @apply bg-slate-50/50;
+}
+
+/* Required field indicator */
+.required-field::after {
+    content: '*';
+    @apply text-red-500 ml-1;
+}
