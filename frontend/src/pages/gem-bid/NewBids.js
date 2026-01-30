@@ -56,6 +56,11 @@ const NewBids = () => {
   const [bids, setBids] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
+  const [filters, setFilters] = useState({
+    Firm_name: "",
+    status: "all",
+    item_category: ""
+  });
   const [uploading, setUploading] = useState(false);
 
   useEffect(() => {
@@ -133,7 +138,6 @@ const NewBids = () => {
 
     try {
       const response = await axios.post(`${API_URL}/bulk-upload`, formData, {
-        ...getAuthHeader(),
         headers: {
           ...getAuthHeader().headers,
           "Content-Type": "multipart/form-data"
@@ -155,10 +159,22 @@ const NewBids = () => {
     }
   };
 
-  const filteredBids = bids.filter(bid =>
-    bid.gem_bid_no.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    bid.status.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredBids = bids.filter(bid => {
+    const matchesSearch =
+      bid.gem_bid_no.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (bid.Firm_name && bid.Firm_name.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      (bid.description && bid.description.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      bid.status.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (bid.item_category && bid.item_category.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      (bid.city && bid.city.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      (bid.department && bid.department.toLowerCase().includes(searchTerm.toLowerCase()));
+
+    const matchesFirm = !filters.Firm_name || (bid.Firm_name && bid.Firm_name.toLowerCase().includes(filters.Firm_name.toLowerCase()));
+    const matchesStatus = filters.status === "all" || bid.status === filters.status;
+    const matchesCategory = !filters.item_category || (bid.item_category && bid.item_category.toLowerCase().includes(filters.item_category.toLowerCase()));
+
+    return matchesSearch && matchesFirm && matchesStatus && matchesCategory;
+  });
 
   if (loading) {
     return (
@@ -217,19 +233,75 @@ const NewBids = () => {
         </div>
       </div>
 
-      {/* Search */}
+      {/* Search and Filters */}
       <Card className="bg-white border-slate-200 shadow-sm">
-        <CardContent className="p-4">
+        <CardContent className="p-4 space-y-4">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
             <Input
-              placeholder="Search by Bid No or Status..."
+              placeholder="Search anything (Bid No, Description, Department...)"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="pl-10 bg-white border-slate-300"
               data-testid="search-input"
             />
           </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="space-y-1.5">
+              <label className="text-xs font-semibold text-slate-500 uppercase tracking-wider ml-1">Filter by Firm Name</label>
+              <Input
+                placeholder="Enter firm name..."
+                value={filters.Firm_name}
+                onChange={(e) => setFilters({ ...filters, Firm_name: e.target.value })}
+                className="bg-white border-slate-300 h-9"
+              />
+            </div>
+
+            <div className="space-y-1.5">
+              <label className="text-xs font-semibold text-slate-500 uppercase tracking-wider ml-1">Filter by Status</label>
+              <Select
+                value={filters.status}
+                onValueChange={(value) => setFilters({ ...filters, status: value })}
+              >
+                <SelectTrigger className="bg-white border-slate-300 h-9 text-sm">
+                  <SelectValue placeholder="All Statuses" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Statuses</SelectItem>
+                  {STATUSES.map((status) => (
+                    <SelectItem key={status} value={status}>{status}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-1.5">
+              <label className="text-xs font-semibold text-slate-500 uppercase tracking-wider ml-1">Filter by Category</label>
+              <Input
+                placeholder="Electronics, Furniture..."
+                value={filters.item_category}
+                onChange={(e) => setFilters({ ...filters, item_category: e.target.value })}
+                className="bg-white border-slate-300 h-9"
+              />
+            </div>
+          </div>
+
+          {(searchTerm || filters.Firm_name || filters.status !== "all" || filters.item_category) && (
+            <div className="flex justify-end pt-2">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  setSearchTerm("");
+                  setFilters({ Firm_name: "", status: "all", item_category: "" });
+                }}
+                className="text-slate-500 hover:text-slate-800 text-xs h-7"
+              >
+                Clear all filters
+              </Button>
+            </div>
+          )}
         </CardContent>
       </Card>
 
@@ -253,11 +325,12 @@ const NewBids = () => {
               <Table>
                 <TableHeader>
                   <TableRow className="bg-slate-50 border-slate-200">
+                    <TableHead className="text-slate-600 font-semibold">Firm Name</TableHead>
                     <TableHead className="text-slate-600 font-semibold">Gem Bid No</TableHead>
-                    <TableHead className="text-slate-600 font-semibold">Start Date</TableHead>
+                    <TableHead className="text-slate-600 font-semibold">Bid Details</TableHead>
                     <TableHead className="text-slate-600 font-semibold">End Date</TableHead>
-                    <TableHead className="text-slate-600 font-semibold text-right">EMD Amount</TableHead>
-                    <TableHead className="text-slate-600 font-semibold text-right">Quantity</TableHead>
+                    <TableHead className="text-slate-600 font-semibold text-right">EMD</TableHead>
+                    <TableHead className="text-slate-600 font-semibold text-right">Qty</TableHead>
                     <TableHead className="text-slate-600 font-semibold">Status</TableHead>
                     <TableHead className="text-slate-600 font-semibold text-center">Actions</TableHead>
                   </TableRow>
@@ -269,11 +342,14 @@ const NewBids = () => {
                       className={`border-slate-200 ${index % 2 === 0 ? 'bg-white' : 'bg-slate-50/50'}`}
                       data-testid={`bid-row-${bid.id}`}
                     >
-                      <TableCell className="font-mono text-slate-800 font-medium">
+                      <TableCell className="font-medium text-slate-800">
+                        {bid.Firm_name || "-"}
+                      </TableCell>
+                      <TableCell className="font-mono text-slate-700">
                         {bid.gem_bid_no}
                       </TableCell>
                       <TableCell className="text-slate-600">
-                        {new Date(bid.start_date).toLocaleDateString()}
+                        {bid.Bid_details || "-"}
                       </TableCell>
                       <TableCell className="text-slate-600">
                         {new Date(bid.end_date).toLocaleDateString()}

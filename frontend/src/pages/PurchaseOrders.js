@@ -75,7 +75,6 @@ const PurchaseOrders = () => {
         `${API_URL}/purchase-orders/bulk-upload`,
         formData,
         {
-          ...getAuthHeader(),
           headers: {
             ...getAuthHeader().headers,
             "Content-Type": "multipart/form-data",

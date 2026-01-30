@@ -17,6 +17,9 @@ from openpyxl import Workbook, load_workbook
 import shutil
 from dotenv import load_dotenv
 import urllib.parse
+import asyncio
+import certifi
+from bid_reminder_scheduler import init_scheduler, shutdown_scheduler, get_scheduler_status
 
 # ================= SETUP & CONFIG =================
 
@@ -34,7 +37,7 @@ GEM_BID_UPLOAD_DIR.mkdir(exist_ok=True)
 # 1.5 Default Credentials
 CRM_USER_EMAIL = os.getenv("CRM_USER_EMAIL", "sunil@bora.tech")
 CRM_USER_PASSWORD = os.getenv("CRM_USER_PASSWORD", "sunil@1202")
-GEM_BID_USER_EMAIL = os.getenv("GEM_BID_USER_EMAIL", "yash@bora.tech")
+GEM_BID_USER_EMAIL = os.getenv("GEM_BID_USER_EMAIL", "yash.b@bora.tech")
 GEM_BID_USER_PASSWORD = os.getenv("GEM_BID_USER_PASSWORD", "yash@123")
 
 # 2. Database Configuration
@@ -63,44 +66,65 @@ class MockCollection:
         self.data = []
     async def find_one(self, query, projection=None):
         for item in self.data:
-            if all(item.get(k) == v for k, v in query.items()):
+            if self._match(item, query):
                 return item.copy()
         return None
-    async def find(self, query=None, projection=None):
+
+    def _match(self, item, query):
+        if not query: return True
+        for k, v in query.items():
+            if k == "$ne": # Handle basic $ne for MockDB
+                continue 
+            if isinstance(v, dict):
+                if "$ne" in v:
+                    if item.get(k) == v["$ne"]: return False
+                else:
+                    if item.get(k) != v: return False
+            elif item.get(k) != v:
+                return False
+        return True
+
+    def find(self, query=None, projection=None):
         class MockCursor:
             def __init__(self, data): self.data = data
-            def sort(self, *args, **kwargs): return self
+            def sort(self, *args, **kwargs):
+                # Basic mock sort - doesn't actually sort but matches API
+                return self
             async def to_list(self, length): return self.data
-        if not query: return MockCursor(self.data[:])
-        res = [item.copy() for item in self.data if all(item.get(k) == v for k, v in query.items())]
+        
+        res = [item.copy() for item in self.data if self._match(item, query)]
         return MockCursor(res)
+    
     async def insert_one(self, doc):
         self.data.append(doc)
         return type('obj', (), {'inserted_id': 'demo_id'})
+    
     async def insert_many(self, docs):
         self.data.extend(docs)
         return True
+    
     async def update_one(self, query, update, upsert=False):
         for item in self.data:
-            if all(item.get(k) == v for k, v in query.items()):
+            if self._match(item, query):
                 if "$set" in update: item.update(update["$set"])
                 return True
         if upsert: await self.insert_one({**query, **update.get("$set", {})})
         return True
+    
     async def delete_one(self, query):
         for i, item in enumerate(self.data):
-            if all(item.get(k) == v for k, v in query.items()):
+            if self._match(item, query):
                 self.data.pop(i)
                 return type('obj', (), {'deleted_count': 1})
         return type('obj', (), {'deleted_count': 0})
+    
     async def count_documents(self, query):
-        if not query: return len(self.data)
-        return len([item for item in self.data if all(item.get(k) == v for k, v in query.items())])
-    async def aggregate(self, pipeline): # Very basic mock
+        return len([item for item in self.data if self._match(item, query)])
+
+    async def aggregate(self, pipeline): 
         class MockCursor:
             async def to_list(self, length): return []
         return MockCursor()
-    def sort(self, *args, **kwargs): return self
 
 class MockDB:
     def __init__(self):
@@ -119,9 +143,8 @@ try:
         db = MockDB()
         logger.warning("No MONGO_URI. Using Demo Mode (In-memory)")
     else:
-        mongo_client = AsyncIOMotorClient(MONGO_URI, serverSelectionTimeoutMS=2000)
+        mongo_client = AsyncIOMotorClient(MONGO_URI, serverSelectionTimeoutMS=5000, tlsCAFile=certifi.where())
         db = mongo_client[DB_NAME]
-        # Test connection later in startup
 except Exception:
     db = MockDB()
     logger.warning("Database init failed. Using Demo Mode (In-memory)")
@@ -145,8 +168,8 @@ api_router = APIRouter(prefix="/api")
 async def startup_event():
     global db
     try:
-        # Check connection with a short timeout
-        await asyncio.wait_for(db.command('ping'), timeout=2.0)
+        # Check connection with a longer timeout
+        await asyncio.wait_for(db.command('ping'), timeout=5.0)
         logger.info("MongoDB connected successfully")
     except Exception as e:
         logger.error(f"MongoDB connection failed: {e}. Switching to Demo Mode (In-Memory).")
@@ -185,6 +208,13 @@ async def startup_event():
         logger.info("Database initialized successfully")
     except Exception as e:
         logger.error(f"Failed to initialize users in database: {e}")
+    
+    # Initialize bid reminder scheduler
+    try:
+        init_scheduler(db)
+        logger.info("Bid reminder scheduler initialized successfully")
+    except Exception as e:
+        logger.error(f"Failed to initialize bid reminder scheduler: {e}")
 
 # Allowed file types for documents
 ALLOWED_EXTENSIONS = {'.pdf', '.doc', '.docx', '.xls', '.xlsx', '.png'}
@@ -1213,7 +1243,9 @@ class GemBidStatusUpdate(BaseModel):
     timestamp: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
 
 class GemBidBase(BaseModel):
+    Firm_name: Optional[str] = None
     gem_bid_no: str
+    Bid_details: Optional[str] = None
     description: Optional[str] = None
     start_date: str
     end_date: str
@@ -1250,16 +1282,20 @@ GEM_BID_STATUSES = [
 ]
 
 # GEM BID Order Model
-class GemOrderBase(BaseModel):
-    gem_bid_no: str
+class GemOrderItem(BaseModel):
     sku: str
     vendor: str
     price: float
     quantity: float
     invoice_value: float
     advance_paid: float
+    remaining_amount: float = 0
     date: str
     delivery_date: str
+
+class GemOrderBase(BaseModel):
+    gem_bid_no: str
+    items: List[GemOrderItem] = []
 
 class GemOrderCreate(GemOrderBase):
     pass
@@ -1267,7 +1303,6 @@ class GemOrderCreate(GemOrderBase):
 class GemOrder(GemOrderBase):
     model_config = ConfigDict(extra="ignore")
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
-    remaining_amount: float = 0
     created_date: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
 
 # GEM BID Authentication
@@ -1320,6 +1355,12 @@ async def gem_bid_login(request: LoginRequest):
     
     raise HTTPException(status_code=401, detail="Invalid credentials")
 
+@api_router.get("/gem-bid/scheduler/status")
+async def get_scheduler_status_endpoint(user: dict = Depends(verify_gem_token)):
+    """Get the status of the bid reminder scheduler"""
+    status = get_scheduler_status()
+    return status
+
 # GEM BID CRUD Endpoints
 @api_router.get("/gem-bid/bids", response_model=List[GemBid])
 async def get_gem_bids(status_filter: Optional[str] = None, user: dict = Depends(verify_gem_token)):
@@ -1331,18 +1372,18 @@ async def get_gem_bids(status_filter: Optional[str] = None, user: dict = Depends
 
 @api_router.get("/gem-bid/bids/new")
 async def get_new_bids(user: dict = Depends(verify_gem_token)):
-    """Get all bids except 'Order Complete' status"""
+    """Get all bids except 'Bid Awarded', 'Supply Order Received', 'Material Procurement', 'Order Complete'"""
     bids = await db.gem_bids.find(
-        {"status": {"$ne": "Order Complete"}},
+        {"status": {"$nin": ["Bid Awarded", "Supply Order Received", "Material Procurement", "Order Complete"]}},
         {"_id": 0}
     ).sort("created_date", -1).to_list(1000)
     return bids
 
 @api_router.get("/gem-bid/bids/completed")
 async def get_completed_bids(user: dict = Depends(verify_gem_token)):
-    """Get only 'Order Complete' bids for All Bid section"""
+    """Get bids with statuses: 'Bid Awarded', 'Supply Order Received', 'Material Procurement', 'Order Complete'"""
     bids = await db.gem_bids.find(
-        {"status": "Order Complete"},
+        {"status": {"$in": ["Bid Awarded", "Supply Order Received", "Material Procurement", "Order Complete"]}},
         {"_id": 0}
     ).sort("created_date", -1).to_list(1000)
     return bids
@@ -1494,14 +1535,14 @@ async def download_gem_bid_template(user: dict = Depends(verify_gem_token)):
     ws = wb.active
     ws.title = "GEM Bids"
     headers = [
-        "Gem Bid No*", "Description", "Start Date* (YYYY-MM-DD)", "End Date* (YYYY-MM-DD)",
+        "Firm Name", "Gem Bid No*", "Bid Details", "Description", "Start Date* (YYYY-MM-DD)", "End Date* (YYYY-MM-DD)",
         "EMD Amount*", "Quantity*", "City", "Department", "Item Category",
         "EPBG Percentage", "EPBG Month", "Status*"
     ]
     ws.append(headers)
     # Example row
     ws.append([
-        "GEM/2024/B/001", "Supply of Office Equipment", "2024-01-15", "2024-02-15",
+        "ABC Corp", "GEM/2024/B/001", "Detailed specs for office equipment", "Supply of Office Equipment", "2024-01-15", "2024-02-15",
         50000, 100, "Delhi", "Ministry of Finance", "Electronics",
         5, 12, "Shortlisted"
     ])
@@ -1527,16 +1568,26 @@ async def bulk_upload_gem_bids(file: UploadFile = File(...), user: dict = Depend
     errors = []
     
     for row_idx, row in enumerate(ws.iter_rows(min_row=2, values_only=True), start=2):
-        if not row[0]:
+        if not row[1]: # Gem Bid No is now at index 1
             continue
         try:
             # Validate required fields
-            gem_bid_no = str(row[0]).strip()
-            start_date = str(row[2]).strip() if row[2] else None
-            end_date = str(row[3]).strip() if row[3] else None
-            emd_amount = float(row[4]) if row[4] else None
-            quantity = float(row[5]) if row[5] else None
-            status = str(row[11]).strip() if len(row) > 11 and row[11] else "Shortlisted"
+            firm_name = str(row[0]).strip() if row[0] else None
+            gem_bid_no = str(row[1]).strip()
+            bid_details = str(row[2]).strip() if row[2] else None
+            description = str(row[3]).strip() if row[3] else None
+            start_date = str(row[4]).strip() if row[4] else None
+            end_date = str(row[5]).strip() if row[5] else None
+            emd_amount = float(row[6]) if row[6] else None
+            quantity = float(row[7]) if row[7] else None
+            
+            # Map remaining fields
+            city = str(row[8]).strip() if len(row) > 8 and row[8] else None
+            department = str(row[9]).strip() if len(row) > 9 and row[9] else None
+            item_category = str(row[10]).strip() if len(row) > 10 and row[10] else None
+            epbg_percentage = float(row[11]) if len(row) > 11 and row[11] else None
+            epbg_month = int(row[12]) if len(row) > 12 and row[12] else None
+            status = str(row[13]).strip() if len(row) > 13 and row[13] else "Shortlisted"
             
             if not all([start_date, end_date, emd_amount is not None, quantity is not None]):
                 errors.append(f"Row {row_idx}: Missing required fields")
@@ -1546,17 +1597,19 @@ async def bulk_upload_gem_bids(file: UploadFile = File(...), user: dict = Depend
                 status = "Shortlisted"
             
             bid = GemBid(
+                Firm_name=firm_name,
                 gem_bid_no=gem_bid_no,
-                description=str(row[1]) if row[1] else None,
+                Bid_details=bid_details,
+                description=description,
                 start_date=start_date,
                 end_date=end_date,
                 emd_amount=emd_amount,
                 quantity=quantity,
-                city=str(row[6]) if len(row) > 6 and row[6] else None,
-                department=str(row[7]) if len(row) > 7 and row[7] else None,
-                item_category=str(row[8]) if len(row) > 8 and row[8] else None,
-                epbg_percentage=float(row[9]) if len(row) > 9 and row[9] else None,
-                epbg_month=int(row[10]) if len(row) > 10 and row[10] else None,
+                city=city,
+                department=department,
+                item_category=item_category,
+                epbg_percentage=epbg_percentage,
+                epbg_month=epbg_month,
                 status=status,
                 status_history=[GemBidStatusUpdate(status=status)]
             )
@@ -1576,6 +1629,22 @@ async def get_gem_bid_statuses(user: dict = Depends(verify_gem_token)):
 @api_router.get("/gem-bid/orders", response_model=List[GemOrder])
 async def get_gem_orders(user: dict = Depends(verify_gem_token)):
     orders = await db.gem_orders.find({}, {"_id": 0}).sort("created_date", -1).to_list(1000)
+    
+    # Handle backward compatibility for old single-SKU orders
+    for order in orders:
+        if "items" not in order or not order["items"]:
+            # Synthesize an items list from root fields
+            order["items"] = [{
+                "sku": order.get("sku", "-"),
+                "vendor": order.get("vendor", "-"),
+                "price": order.get("price", 0),
+                "quantity": order.get("quantity", 0),
+                "invoice_value": order.get("invoice_value", 0),
+                "advance_paid": order.get("advance_paid", 0),
+                "remaining_amount": order.get("remaining_amount", 0),
+                "date": order.get("date", ""),
+                "delivery_date": order.get("delivery_date", "")
+            }]
     return orders
 
 @api_router.get("/gem-bid/orders/{order_id}", response_model=GemOrder)
@@ -1583,14 +1652,30 @@ async def get_gem_order(order_id: str, user: dict = Depends(verify_gem_token)):
     order = await db.gem_orders.find_one({"id": order_id}, {"_id": 0})
     if not order:
         raise HTTPException(status_code=404, detail="Order not found")
+        
+    # Handle backward compatibility
+    if "items" not in order or not order["items"]:
+        order["items"] = [{
+            "sku": order.get("sku", "-"),
+            "vendor": order.get("vendor", "-"),
+            "price": order.get("price", 0),
+            "quantity": order.get("quantity", 0),
+            "invoice_value": order.get("invoice_value", 0),
+            "advance_paid": order.get("advance_paid", 0),
+            "remaining_amount": order.get("remaining_amount", 0),
+            "date": order.get("date", ""),
+            "delivery_date": order.get("delivery_date", "")
+        }]
     return order
 
 @api_router.post("/gem-bid/orders", response_model=GemOrder)
 async def create_gem_order(order: GemOrderCreate, user: dict = Depends(verify_gem_token)):
-    remaining_amount = order.invoice_value - order.advance_paid
+    # Calculate remaining amount for each item
+    for item in order.items:
+        item.remaining_amount = round(item.invoice_value - item.advance_paid, 2)
+        
     order_obj = GemOrder(
-        **order.model_dump(),
-        remaining_amount=round(remaining_amount, 2)
+        **order.model_dump()
     )
     await db.gem_orders.insert_one(order_obj.model_dump())
     return order_obj
@@ -1601,9 +1686,11 @@ async def update_gem_order(order_id: str, order: GemOrderCreate, user: dict = De
     if not existing:
         raise HTTPException(status_code=404, detail="Order not found")
     
-    update_data = order.model_dump()
-    update_data["remaining_amount"] = round(order.invoice_value - order.advance_paid, 2)
+    # Calculate remaining amount for each item
+    for item in order.items:
+        item.remaining_amount = round(item.invoice_value - item.advance_paid, 2)
     
+    update_data = order.model_dump()
     await db.gem_orders.update_one({"id": order_id}, {"$set": update_data})
     updated = await db.gem_orders.find_one({"id": order_id}, {"_id": 0})
     return updated
@@ -1633,6 +1720,7 @@ app.add_middleware(
 
 @app.on_event("shutdown")
 async def shutdown():
+    shutdown_scheduler()
     mongo_client.close()
 
 

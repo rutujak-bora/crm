@@ -31,7 +31,7 @@ const GemBidLogin = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
-    
+
     try {
       await login(email, password);
       toast.success("Welcome to GEM BID CRM!");
@@ -50,7 +50,7 @@ const GemBidLogin = () => {
       <div className="absolute inset-0 opacity-[0.02]" style={{
         backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23000000' fill-opacity='1'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`
       }} />
-      
+
       {/* Left decoration */}
       <div className="hidden lg:block absolute left-0 top-0 w-1/3 h-full bg-gradient-to-br from-emerald-700 to-emerald-900">
         <div className="flex flex-col justify-center h-full px-12 text-white">
@@ -121,7 +121,7 @@ const GemBidLogin = () => {
                 <Input
                   id="email"
                   type="email"
-                  placeholder="yash@bora.tech"
+                  placeholder="yash.b@bora.tech"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   className="pl-10 bg-white border-slate-300 text-slate-800 placeholder:text-slate-400 focus:border-emerald-500 focus:ring-emerald-500/20"

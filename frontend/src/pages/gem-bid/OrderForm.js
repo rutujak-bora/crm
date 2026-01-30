@@ -14,7 +14,7 @@ import {
   SelectValue,
 } from "../../components/ui/select";
 import { toast } from "sonner";
-import { ArrowLeft, Save, ShoppingCart } from "lucide-react";
+import { ArrowLeft, Save, ShoppingCart, Plus, Trash2 } from "lucide-react";
 
 const API_URL = process.env.REACT_APP_BACKEND_URL + "/api/gem-bid";
 
@@ -28,30 +28,18 @@ const OrderForm = () => {
   const [bids, setBids] = useState([]);
   const [formData, setFormData] = useState({
     gem_bid_no: "",
-    sku: "",
-    vendor: "",
-    price: "",
-    quantity: "",
-    invoice_value: "",
-    advance_paid: "",
-    date: new Date().toISOString().split("T")[0],
-    delivery_date: ""
+    items: []
   });
-
-  const [remainingAmount, setRemainingAmount] = useState(0);
 
   useEffect(() => {
     fetchCompletedBids();
     if (isEdit) {
       fetchOrder();
+    } else {
+      // Add initial item for new order
+      addItem();
     }
   }, [id]);
-
-  useEffect(() => {
-    const invoice = parseFloat(formData.invoice_value) || 0;
-    const advance = parseFloat(formData.advance_paid) || 0;
-    setRemainingAmount(invoice - advance);
-  }, [formData.invoice_value, formData.advance_paid]);
 
   const fetchCompletedBids = async () => {
     try {
@@ -69,14 +57,16 @@ const OrderForm = () => {
       const data = response.data;
       setFormData({
         gem_bid_no: data.gem_bid_no,
-        sku: data.sku,
-        vendor: data.vendor,
-        price: data.price.toString(),
-        quantity: data.quantity.toString(),
-        invoice_value: data.invoice_value.toString(),
-        advance_paid: data.advance_paid.toString(),
-        date: data.date,
-        delivery_date: data.delivery_date
+        items: data.items.map(item => ({
+          sku: item.sku,
+          vendor: item.vendor,
+          price: item.price.toString(),
+          quantity: item.quantity.toString(),
+          invoice_value: item.invoice_value.toString(),
+          advance_paid: item.advance_paid.toString(),
+          date: item.date,
+          delivery_date: item.delivery_date
+        }))
       });
     } catch (error) {
       toast.error("Failed to load order details");
@@ -86,22 +76,73 @@ const OrderForm = () => {
     }
   };
 
+  const addItem = () => {
+    setFormData(prev => ({
+      ...prev,
+      items: [
+        ...prev.items,
+        {
+          sku: "",
+          vendor: "",
+          price: "",
+          quantity: "",
+          invoice_value: "",
+          advance_paid: "",
+          date: new Date().toISOString().split("T")[0],
+          delivery_date: ""
+        }
+      ]
+    }));
+  };
+
+  const removeItem = (index) => {
+    if (formData.items.length === 1) {
+      toast.error("At least one SKU is required");
+      return;
+    }
+    const newItems = [...formData.items];
+    newItems.splice(index, 1);
+    setFormData(prev => ({ ...prev, items: newItems }));
+  };
+
+  const handleItemChange = (index, field, value) => {
+    const newItems = [...formData.items];
+    newItems[index] = { ...newItems[index], [field]: value };
+
+    // Auto calculate invoice value if price or quantity changes
+    if (field === "price" || field === "quantity") {
+      const price = parseFloat(newItems[index].price) || 0;
+      const quantity = parseFloat(newItems[index].quantity) || 0;
+      newItems[index].invoice_value = (price * quantity).toFixed(2);
+    }
+
+    setFormData(prev => ({ ...prev, items: newItems }));
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     if (!formData.gem_bid_no) {
       toast.error("Please select a Bid No");
+      return;
+    }
+
+    if (formData.items.length === 0) {
+      toast.error("Please add at least one SKU");
       return;
     }
 
     try {
       setLoading(true);
       const payload = {
-        ...formData,
-        price: parseFloat(formData.price),
-        quantity: parseFloat(formData.quantity),
-        invoice_value: parseFloat(formData.invoice_value),
-        advance_paid: parseFloat(formData.advance_paid)
+        gem_bid_no: formData.gem_bid_no,
+        items: formData.items.map(item => ({
+          ...item,
+          price: parseFloat(item.price) || 0,
+          quantity: parseFloat(item.quantity) || 0,
+          invoice_value: parseFloat(item.invoice_value) || 0,
+          advance_paid: parseFloat(item.advance_paid) || 0
+        }))
       };
 
       if (isEdit) {
@@ -119,15 +160,6 @@ const OrderForm = () => {
     }
   };
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
-  };
-
-  const handleSelectChange = (value) => {
-    setFormData(prev => ({ ...prev, gem_bid_no: value }));
-  };
-
   if (loading && bids.length === 0) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -137,7 +169,7 @@ const OrderForm = () => {
   }
 
   return (
-    <div className="max-w-4xl mx-auto space-y-6">
+    <div className="max-w-5xl mx-auto space-y-6 pb-20">
       <div className="flex items-center gap-4">
         <Button
           variant="ghost"
@@ -159,176 +191,171 @@ const OrderForm = () => {
 
       <Card className="bg-white border-slate-200 shadow-sm">
         <CardHeader>
-          <div className="flex items-center gap-3">
-            <div className="p-2 rounded-xl bg-emerald-100 text-emerald-600">
-              <ShoppingCart size={20} />
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-xl bg-emerald-100 text-emerald-600">
+                <ShoppingCart size={20} />
+              </div>
+              <div>
+                <CardTitle className="text-lg">Order Details</CardTitle>
+                <CardDescription>Select Bid and add SKUs</CardDescription>
+              </div>
             </div>
-            <div>
-              <CardTitle className="text-lg">Order Information</CardTitle>
-              <CardDescription>All fields are required except where noted</CardDescription>
-            </div>
+            <Button
+              type="button"
+              onClick={addItem}
+              className="bg-blue-600 hover:bg-blue-700 h-9"
+            >
+              <Plus size={16} className="mr-2" />
+              Add SKU
+            </Button>
           </div>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {/* Bid No (Dropdown) */}
-              <div className="space-y-2">
-                <Label htmlFor="gem_bid_no">Bid No*</Label>
-                <Select
-                  value={formData.gem_bid_no}
-                  onValueChange={handleSelectChange}
-                >
-                  <SelectTrigger id="gem_bid_no" className="bg-white border-slate-300">
-                    <SelectValue placeholder="Select a Bid No" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {bids.map((bid) => (
-                      <SelectItem key={bid.id} value={bid.gem_bid_no}>
-                        {bid.gem_bid_no}
-                      </SelectItem>
-                    ))}
-                    {bids.length === 0 && (
-                      <SelectItem value="none" disabled>No completed bids found</SelectItem>
-                    )}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              {/* SKU */}
-              <div className="space-y-2">
-                <Label htmlFor="sku">SKU*</Label>
-                <Input
-                  id="sku"
-                  name="sku"
-                  placeholder="Enter SKU"
-                  value={formData.sku}
-                  onChange={handleChange}
-                  required
-                  className="bg-white border-slate-300"
-                />
-              </div>
-
-              {/* Vendor */}
-              <div className="space-y-2">
-                <Label htmlFor="vendor">Vendor*</Label>
-                <Input
-                  id="vendor"
-                  name="vendor"
-                  placeholder="Enter Vendor Name"
-                  value={formData.vendor}
-                  onChange={handleChange}
-                  required
-                  className="bg-white border-slate-300"
-                />
-              </div>
-
-              {/* Price */}
-              <div className="space-y-2">
-                <Label htmlFor="price">Price*</Label>
-                <Input
-                  id="price"
-                  name="price"
-                  type="number"
-                  step="0.01"
-                  placeholder="0.00"
-                  value={formData.price}
-                  onChange={handleChange}
-                  required
-                  className="bg-white border-slate-300"
-                />
-              </div>
-
-              {/* Quantity */}
-              <div className="space-y-2">
-                <Label htmlFor="quantity">Quantity*</Label>
-                <Input
-                  id="quantity"
-                  name="quantity"
-                  type="number"
-                  step="0.01"
-                  placeholder="0.00"
-                  value={formData.quantity}
-                  onChange={handleChange}
-                  required
-                  className="bg-white border-slate-300"
-                />
-              </div>
-
-              {/* Invoice Value */}
-              <div className="space-y-2">
-                <Label htmlFor="invoice_value">Invoice Value*</Label>
-                <Input
-                  id="invoice_value"
-                  name="invoice_value"
-                  type="number"
-                  step="0.01"
-                  placeholder="0.00"
-                  value={formData.invoice_value}
-                  onChange={handleChange}
-                  required
-                  className="bg-white border-slate-300"
-                />
-              </div>
-
-              {/* Advance Paid */}
-              <div className="space-y-2">
-                <Label htmlFor="advance_paid">Advance Paid*</Label>
-                <Input
-                  id="advance_paid"
-                  name="advance_paid"
-                  type="number"
-                  step="0.01"
-                  placeholder="0.00"
-                  value={formData.advance_paid}
-                  onChange={handleChange}
-                  required
-                  className="bg-white border-slate-300"
-                />
-              </div>
-
-              {/* Remaining Amount (Auto) */}
-              <div className="space-y-2">
-                <Label htmlFor="remaining_amount">Remaining Amount (Auto)</Label>
-                <Input
-                  id="remaining_amount"
-                  value={remainingAmount.toFixed(2)}
-                  readOnly
-                  disabled
-                  className="bg-slate-100 border-slate-300 font-mono"
-                />
-              </div>
-
-              {/* Date */}
-              <div className="space-y-2">
-                <Label htmlFor="date">Date*</Label>
-                <Input
-                  id="date"
-                  name="date"
-                  type="date"
-                  value={formData.date}
-                  onChange={handleChange}
-                  required
-                  className="bg-white border-slate-300"
-                />
-              </div>
-
-              {/* Delivery Date */}
-              <div className="space-y-2">
-                <Label htmlFor="delivery_date">Delivery Date*</Label>
-                <Input
-                  id="delivery_date"
-                  name="delivery_date"
-                  type="date"
-                  value={formData.delivery_date}
-                  onChange={handleChange}
-                  required
-                  className="bg-white border-slate-300"
-                />
-              </div>
+          <form onSubmit={handleSubmit} className="space-y-8">
+            {/* Bid Selection */}
+            <div className="max-w-md space-y-2">
+              <Label htmlFor="gem_bid_no">Bid No*</Label>
+              <Select
+                value={formData.gem_bid_no}
+                onValueChange={(val) => setFormData(prev => ({ ...prev, gem_bid_no: val }))}
+              >
+                <SelectTrigger id="gem_bid_no" className="bg-white border-slate-300">
+                  <SelectValue placeholder="Select a Bid No" />
+                </SelectTrigger>
+                <SelectContent>
+                  {bids.map((bid) => (
+                    <SelectItem key={bid.id} value={bid.gem_bid_no}>
+                      {bid.gem_bid_no}
+                    </SelectItem>
+                  ))}
+                  {bids.length === 0 && (
+                    <SelectItem value="none" disabled>No completed bids found</SelectItem>
+                  )}
+                </SelectContent>
+              </Select>
             </div>
 
-            <div className="pt-6 flex justify-end gap-4">
+            {/* SKUs List */}
+            <div className="space-y-6">
+              {formData.items.map((item, index) => (
+                <div key={index} className="p-6 rounded-xl border border-slate-200 bg-slate-50/50 space-y-4 relative">
+                  <div className="flex items-center justify-between border-b border-slate-200 pb-3 mb-4">
+                    <h3 className="font-semibold text-slate-700">SKU {index + 1}</h3>
+                    {formData.items.length > 1 && (
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => removeItem(index)}
+                        className="text-red-500 hover:text-red-700 hover:bg-red-50"
+                      >
+                        <Trash2 size={16} className="mr-2" />
+                        Remove
+                      </Button>
+                    )}
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div className="space-y-2">
+                      <Label>SKU*</Label>
+                      <Input
+                        placeholder="SKU Code"
+                        value={item.sku}
+                        onChange={(e) => handleItemChange(index, "sku", e.target.value)}
+                        required
+                        className="bg-white"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Vendor*</Label>
+                      <Input
+                        placeholder="Vendor Name"
+                        value={item.vendor}
+                        onChange={(e) => handleItemChange(index, "vendor", e.target.value)}
+                        required
+                        className="bg-white"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Price*</Label>
+                      <Input
+                        type="number"
+                        placeholder="0.00"
+                        value={item.price}
+                        onChange={(e) => handleItemChange(index, "price", e.target.value)}
+                        required
+                        className="bg-white"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Quantity*</Label>
+                      <Input
+                        type="number"
+                        placeholder="0.00"
+                        value={item.quantity}
+                        onChange={(e) => handleItemChange(index, "quantity", e.target.value)}
+                        required
+                        className="bg-white"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Invoice Value</Label>
+                      <Input
+                        type="number"
+                        placeholder="0.00"
+                        value={item.invoice_value}
+                        readOnly
+                        disabled
+                        className="bg-slate-100 font-mono"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Advance Paid*</Label>
+                      <Input
+                        type="number"
+                        placeholder="0.00"
+                        value={item.advance_paid}
+                        onChange={(e) => handleItemChange(index, "advance_paid", e.target.value)}
+                        required
+                        className="bg-white"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Remaining Amount</Label>
+                      <Input
+                        value={((parseFloat(item.invoice_value) || 0) - (parseFloat(item.advance_paid) || 0)).toFixed(2)}
+                        readOnly
+                        disabled
+                        className="bg-slate-100 font-mono"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Date*</Label>
+                      <Input
+                        type="date"
+                        value={item.date}
+                        onChange={(e) => handleItemChange(index, "date", e.target.value)}
+                        required
+                        className="bg-white"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Delivery Date</Label>
+                      <Input
+                        type="date"
+                        value={item.delivery_date}
+                        onChange={(e) => handleItemChange(index, "delivery_date", e.target.value)}
+                        required
+                        className="bg-white"
+                      />
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <div className="pt-6 border-t flex justify-end gap-4">
               <Button
                 type="button"
                 variant="outline"

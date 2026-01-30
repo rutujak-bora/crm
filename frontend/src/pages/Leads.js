@@ -111,7 +111,6 @@ const Leads = () => {
         `${API_URL}/leads/bulk-upload`,
         formData,
         {
-          ...getAuthHeader(),
           headers: {
             ...getAuthHeader().headers,
             "Content-Type": "multipart/form-data",
@@ -137,7 +136,7 @@ const Leads = () => {
     const matchesSearch =
       lead.customer_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       lead.proforma_invoice_number?.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesCategory = !categoryFilter || 
+    const matchesCategory = !categoryFilter ||
       lead.products?.some(p => p.category?.toLowerCase().includes(categoryFilter.toLowerCase()));
     return matchesSearch && matchesCategory;
   });

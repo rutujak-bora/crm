@@ -37,7 +37,9 @@ const BidForm = () => {
   const { getAuthHeader } = useGemBidAuth();
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
+    Firm_name: "",
     gem_bid_no: "",
+    Bid_details: "",
     description: "",
     start_date: "",
     end_date: "",
@@ -64,7 +66,9 @@ const BidForm = () => {
       const response = await axios.get(`${API_URL}/bids/${id}`, getAuthHeader());
       const bid = response.data;
       setFormData({
+        Firm_name: bid.Firm_name || "",
         gem_bid_no: bid.gem_bid_no || "",
+        Bid_details: bid.Bid_details || "",
         description: bid.description || "",
         start_date: bid.start_date?.split("T")[0] || "",
         end_date: bid.end_date?.split("T")[0] || "",
@@ -164,6 +168,16 @@ const BidForm = () => {
           <CardContent className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
+                <Label className="text-slate-700">Firm Name</Label>
+                <Input
+                  value={formData.Firm_name}
+                  onChange={(e) => handleChange("Firm_name", e.target.value)}
+                  placeholder="ABC Corp"
+                  className="bg-white border-slate-300"
+                  data-testid="firm-name-input"
+                />
+              </div>
+              <div className="space-y-2">
                 <Label className="text-slate-700">Gem Bid No *</Label>
                 <Input
                   value={formData.gem_bid_no}
@@ -174,6 +188,9 @@ const BidForm = () => {
                   data-testid="gem-bid-no-input"
                 />
               </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label className="text-slate-700">Status *</Label>
                 <Select
@@ -191,6 +208,16 @@ const BidForm = () => {
                     ))}
                   </SelectContent>
                 </Select>
+              </div>
+              <div className="space-y-2">
+                <Label className="text-slate-700">Bid Details</Label>
+                <Input
+                  value={formData.Bid_details}
+                  onChange={(e) => handleChange("Bid_details", e.target.value)}
+                  placeholder="Detailed specs or reference..."
+                  className="bg-white border-slate-300"
+                  data-testid="bid-details-input"
+                />
               </div>
             </div>
 

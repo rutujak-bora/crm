@@ -73,7 +73,6 @@ const Customers = () => {
         `${API_URL}/customers/bulk-upload`,
         formData,
         {
-          ...getAuthHeader(),
           headers: {
             ...getAuthHeader().headers,
             "Content-Type": "multipart/form-data",

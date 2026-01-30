@@ -11,7 +11,7 @@ from openpyxl import Workbook
 BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', '').rstrip('/')
 
 # GEM BID Credentials
-GEM_BID_EMAIL = "yash@bora.tech"
+GEM_BID_EMAIL = "yash.b@bora.tech"
 GEM_BID_PASSWORD = "password#@123"
 
 # Main CRM Credentials

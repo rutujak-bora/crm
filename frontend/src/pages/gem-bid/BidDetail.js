@@ -56,7 +56,6 @@ const BidDetail = () => {
 
     try {
       await axios.post(`${API_URL}/bids/${id}/documents`, formData, {
-        ...getAuthHeader(),
         headers: {
           ...getAuthHeader().headers,
           "Content-Type": "multipart/form-data"
@@ -74,7 +73,7 @@ const BidDetail = () => {
 
   const handleDeleteDocument = async (docIndex) => {
     if (!window.confirm("Are you sure you want to delete this document?")) return;
-    
+
     try {
       await axios.delete(`${API_URL}/bids/${id}/documents/${docIndex}`, getAuthHeader());
       toast.success("Document deleted");
@@ -111,10 +110,17 @@ const BidDetail = () => {
             <ArrowLeft size={20} />
           </Button>
           <div>
-            <h1 className="text-2xl font-bold text-slate-800 font-mono">
-              {bid.gem_bid_no}
-            </h1>
-            <p className="text-slate-500 mt-1">Bid Details</p>
+            <div className="flex items-center gap-2">
+              <h1 className="text-2xl font-bold text-slate-800 font-mono">
+                {bid.gem_bid_no}
+              </h1>
+              {bid.Firm_name && (
+                <Badge className="bg-slate-100 text-slate-700 border-slate-200">
+                  {bid.Firm_name}
+                </Badge>
+              )}
+            </div>
+            <p className="text-slate-500 mt-1">Bid Details and Information</p>
           </div>
         </div>
         {!isCompleted && (
@@ -156,7 +162,7 @@ const BidDetail = () => {
                 <Calendar size={14} className="text-slate-400" />
                 <p className="text-xs text-slate-500 uppercase tracking-wider font-medium">Start Date</p>
               </div>
-              <p className="text-lg text-slate-800">
+              <p className="text-sm font-medium text-slate-800">
                 {new Date(bid.start_date).toLocaleDateString()}
               </p>
             </div>
@@ -165,21 +171,32 @@ const BidDetail = () => {
                 <Calendar size={14} className="text-slate-400" />
                 <p className="text-xs text-slate-500 uppercase tracking-wider font-medium">End Date</p>
               </div>
-              <p className="text-lg text-slate-800">
+              <p className="text-sm font-medium text-slate-800">
                 {new Date(bid.end_date).toLocaleDateString()}
               </p>
             </div>
             <div className="p-4 rounded-lg bg-emerald-50 border border-emerald-200">
               <p className="text-xs text-emerald-600 uppercase tracking-wider font-medium mb-2">EMD Amount</p>
-              <p className="text-lg font-mono font-bold text-emerald-700">
+              <p className="text-sm font-mono font-bold text-emerald-700">
                 ₹{bid.emd_amount?.toLocaleString('en-IN')}
               </p>
             </div>
             <div className="p-4 rounded-lg bg-blue-50 border border-blue-200">
               <p className="text-xs text-blue-600 uppercase tracking-wider font-medium mb-2">Quantity</p>
-              <p className="text-lg font-mono font-bold text-blue-700">
+              <p className="text-sm font-mono font-bold text-blue-700">
                 {bid.quantity}
               </p>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+            <div className="p-4 rounded-lg bg-slate-50 border border-slate-200">
+              <p className="text-xs text-slate-500 uppercase tracking-wider font-medium mb-1">Firm Name</p>
+              <p className="text-sm font-medium text-slate-800">{bid.Firm_name || "-"}</p>
+            </div>
+            <div className="p-4 rounded-lg bg-slate-50 border border-slate-200">
+              <p className="text-xs text-slate-500 uppercase tracking-wider font-medium mb-1">Bid Details</p>
+              <p className="text-sm font-medium text-slate-800">{bid.Bid_details || "-"}</p>
             </div>
           </div>
 
@@ -251,8 +268,8 @@ const BidDetail = () => {
           {bid.status_history?.length > 0 ? (
             <div className="space-y-3">
               {bid.status_history.slice().reverse().map((item, index) => (
-                <div 
-                  key={index} 
+                <div
+                  key={index}
                   className="flex items-center gap-4 p-3 rounded-lg bg-slate-50 border border-slate-200"
                 >
                   <div className="w-3 h-3 rounded-full bg-emerald-500"></div>
@@ -316,8 +333,8 @@ const BidDetail = () => {
           {bid.documents?.length > 0 ? (
             <div className="space-y-3">
               {bid.documents.map((doc, index) => (
-                <div 
-                  key={index} 
+                <div
+                  key={index}
                   className="flex items-center justify-between p-4 rounded-lg bg-slate-50 border border-slate-200"
                 >
                   <div className="flex items-center gap-3">
