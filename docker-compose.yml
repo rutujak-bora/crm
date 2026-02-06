@@ -6,11 +6,8 @@ services:
       - "8000:8000"
     volumes:
       - ./backend:/app
-    environment:
-      - MONGO_URI=${MONGO_URI}
-      - DB_NAME=${DB_NAME}
-      - JWT_SECRET=${JWT_SECRET}
-      - CORS_ORIGINS=${CORS_ORIGINS}
+    env_file:
+      - ./backend/.env
     restart: unless-stopped
 
   frontend:
