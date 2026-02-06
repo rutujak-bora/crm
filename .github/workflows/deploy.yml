@@ -1,0 +1,100 @@
+name: Deploy CRM App
+
+on:
+  push:
+    branches: [ "main" ]
+  workflow_dispatch:
+
+jobs:
+  # ===================================================
+  # 🚀 FRONTEND DEPLOYMENT (Build & Upload)
+  # ===================================================
+  deploy-frontend:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+
+      - name: Install Dependencies
+        working-directory: ./frontend
+        run: npm install --legacy-peer-deps
+
+      - name: Build Frontend
+        working-directory: ./frontend
+        env:
+          # IMPORTANT: Pointing to the specific Backend IP
+          REACT_APP_BACKEND_URL: ${{ secrets.REACT_APP_BACKEND_URL }}
+          CI: false
+        run: npm run build
+
+      - name: Deploy to Frontend EC2
+        uses: appleboy/scp-action@master
+        with:
+          host: ${{ secrets.EC2_FRONTEND_IP }}
+          username: ubuntu
+          key: ${{ secrets.EC2_SSH_KEY_FRONTEND }}
+          source: "frontend/build/*"
+          target: "/home/ubuntu/frontend-temp"
+          strip_components: 2
+
+      - name: Swap Build Files on Server
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.EC2_FRONTEND_IP }}
+          username: ubuntu
+          key: ${{ secrets.EC2_SSH_KEY_FRONTEND }}
+          script: |
+            sudo cp -r /home/ubuntu/frontend-temp/* /var/www/html/
+            sudo chown -R www-data:www-data /var/www/html
+            sudo rm -rf /home/ubuntu/frontend-temp
+            sudo systemctl reload nginx
+            echo "✅ Frontend Deployed Successfully"
+
+  # ===================================================
+  # 🚀 BACKEND DEPLOYMENT (Code Sync & Restart)
+  # ===================================================
+  deploy-backend:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Deploy to Backend EC2
+        uses: appleboy/scp-action@master
+        with:
+          host: ${{ secrets.EC2_BACKEND_IP }}
+          username: ubuntu
+          key: ${{ secrets.EC2_SSH_KEY_BACKEND }}
+          # Exclude frontend, git, and local dev files to speed up upload
+          source: "backend/*,!.git,!.env,!.venv,!.pytest_cache"
+          target: "/home/ubuntu/crm-backend-temp"
+          strip_components: 1
+
+      - name: Apply Changes & Restart Service
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.EC2_BACKEND_IP }}
+          username: ubuntu
+          key: ${{ secrets.EC2_SSH_KEY_BACKEND }}
+          script: |
+            # 1. Move files (preserve user uploads/env if they exist in main dir)
+            cp -r /home/ubuntu/crm-backend-temp/* /home/ubuntu/crm-backend/
+            rm -rf /home/ubuntu/crm-backend-temp
+            
+            # 2. Update dependencies
+            cd /home/ubuntu/crm-backend
+            source venv/bin/activate
+            # Only install if requirements.txt changed (optimization skipped for simplicity)
+            pip install -r requirements.txt
+            
+            # 3. Restart Service
+            sudo systemctl restart crm-backend
+            
+            # 4. Verify
+            sudo systemctl status crm-backend --no-pager
+            echo "✅ Backend Deployed Successfully"
