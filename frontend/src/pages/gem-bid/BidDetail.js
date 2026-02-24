@@ -163,7 +163,7 @@ const BidDetail = () => {
                 <p className="text-xs text-slate-500 uppercase tracking-wider font-medium">Start Date</p>
               </div>
               <p className="text-sm font-medium text-slate-800">
-                {new Date(bid.start_date).toLocaleDateString()}
+                {new Date(bid.start_date).toLocaleDateString("en-GB")}
               </p>
             </div>
             <div className="p-4 rounded-lg bg-slate-50 border border-slate-200">
@@ -172,7 +172,7 @@ const BidDetail = () => {
                 <p className="text-xs text-slate-500 uppercase tracking-wider font-medium">End Date</p>
               </div>
               <p className="text-sm font-medium text-slate-800">
-                {new Date(bid.end_date).toLocaleDateString()}
+                {new Date(bid.end_date).toLocaleDateString("en-GB")}
               </p>
             </div>
             <div className="p-4 rounded-lg bg-emerald-50 border border-emerald-200">

@@ -221,7 +221,7 @@ const AllBids = () => {
                         {bid.Bid_details || "-"}
                       </TableCell>
                       <TableCell className="text-slate-600">
-                        {new Date(bid.end_date).toLocaleDateString()}
+                        {new Date(bid.end_date).toLocaleDateString("en-GB")}
                       </TableCell>
                       <TableCell className="text-right font-mono text-slate-700">
                         ₹{bid.emd_amount?.toLocaleString('en-IN')}
