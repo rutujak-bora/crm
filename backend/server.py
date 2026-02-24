@@ -161,6 +161,16 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(level
 logger = logging.getLogger(__name__)
 
 app = FastAPI(title="CRM Backend")
+
+# Add CORS middleware to allow the frontend to communicate with the backend
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Allows all origins for now. You can restrict to ["https://crm.bora.tech"] in production
+    allow_credentials=True,
+    allow_methods=["*"],  # Allows all methods
+    allow_headers=["*"],  # Allows all headers
+)
+
 api_router = APIRouter(prefix="/api")
 
 # Startup event to ensure users exist in database
