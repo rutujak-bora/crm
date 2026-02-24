@@ -59,7 +59,9 @@ const NewBids = () => {
   const [filters, setFilters] = useState({
     Firm_name: "",
     status: "all",
-    item_category: ""
+    item_category: "",
+    startDate: "",
+    endDate: ""
   });
   const [uploading, setUploading] = useState(false);
 
@@ -173,7 +175,29 @@ const NewBids = () => {
     const matchesStatus = filters.status === "all" || bid.status === filters.status;
     const matchesCategory = !filters.item_category || (bid.item_category && bid.item_category.toLowerCase().includes(filters.item_category.toLowerCase()));
 
-    return matchesSearch && matchesFirm && matchesStatus && matchesCategory;
+    // Date Range Filter logic
+    const bidEndDate = new Date(bid.end_date);
+    const matchesStartDate = !filters.startDate || bidEndDate >= new Date(filters.startDate);
+    const matchesEndDate = !filters.endDate || bidEndDate <= new Date(filters.endDate);
+
+    return matchesSearch && matchesFirm && matchesStatus && matchesCategory && matchesStartDate && matchesEndDate;
+  }).sort((a, b) => {
+    // Logic to move "Closing Soon" bids to the top
+    const now = new Date();
+    const threeDaysFromNow = new Date();
+    threeDaysFromNow.setDate(now.getDate() + 3);
+
+    const aEnd = new Date(a.end_date);
+    const bEnd = new Date(b.end_date);
+
+    const aIsClosingSoon = aEnd > now && aEnd <= threeDaysFromNow;
+    const bIsClosingSoon = bEnd > now && bEnd <= threeDaysFromNow;
+
+    if (aIsClosingSoon && !bIsClosingSoon) return -1;
+    if (!aIsClosingSoon && bIsClosingSoon) return 1;
+
+    // Otherwise sort by end date ascending
+    return aEnd - bEnd;
   });
 
   if (loading) {
@@ -285,6 +309,26 @@ const NewBids = () => {
                 className="bg-white border-slate-300 h-9"
               />
             </div>
+
+            <div className="space-y-1.5">
+              <label className="text-xs font-semibold text-slate-500 uppercase tracking-wider ml-1">End Date (From)</label>
+              <Input
+                type="date"
+                value={filters.startDate}
+                onChange={(e) => setFilters({ ...filters, startDate: e.target.value })}
+                className="bg-white border-slate-300 h-9 text-sm"
+              />
+            </div>
+
+            <div className="space-y-1.5">
+              <label className="text-xs font-semibold text-slate-500 uppercase tracking-wider ml-1">End Date (To)</label>
+              <Input
+                type="date"
+                value={filters.endDate}
+                onChange={(e) => setFilters({ ...filters, endDate: e.target.value })}
+                className="bg-white border-slate-300 h-9 text-sm"
+              />
+            </div>
           </div>
 
           {(searchTerm || filters.Firm_name || filters.status !== "all" || filters.item_category) && (
@@ -294,7 +338,7 @@ const NewBids = () => {
                 size="sm"
                 onClick={() => {
                   setSearchTerm("");
-                  setFilters({ Firm_name: "", status: "all", item_category: "" });
+                  setFilters({ Firm_name: "", status: "all", item_category: "", startDate: "", endDate: "" });
                 }}
                 className="text-slate-500 hover:text-slate-800 text-xs h-7"
               >
@@ -351,7 +395,13 @@ const NewBids = () => {
                       <TableCell className="text-slate-600">
                         {bid.Bid_details || "-"}
                       </TableCell>
-                      <TableCell className="text-slate-600">
+                      <TableCell className={`font-medium ${(() => {
+                        const now = new Date();
+                        const threeDaysFromNow = new Date();
+                        threeDaysFromNow.setDate(now.getDate() + 3);
+                        const bidEnd = new Date(bid.end_date);
+                        return (bidEnd > now && bidEnd <= threeDaysFromNow) ? "text-red-600 font-bold" : "text-slate-600";
+                      })()}`}>
                         {new Date(bid.end_date).toLocaleDateString("en-GB")}
                       </TableCell>
                       <TableCell className="text-right font-mono text-slate-700">
